@@ -21,19 +21,29 @@ const config = {
 };
 
 async function getImapClient() {
+    console.log('Connecting to IMAP:', config.host, config.port);
     const client = new ImapFlow(config);
-    await client.connect();
-    return client;
+    try {
+        await client.connect();
+        console.log('IMAP Connected successfully');
+        return client;
+    } catch (err) {
+        console.error('IMAP Connection Failed:', err.message);
+        throw err;
+    }
 }
 
 // Generic email bridge
 app.get('/api/emails', async (req, res) => {
-    const client = await getImapClient();
+    console.log('GET /api/emails requested');
+    let client;
     try {
+        client = await getImapClient();
         let lock = await client.getMailboxLock('INBOX');
+        console.log('Mailbox lock acquired');
         try {
             const emails = [];
-            // Fetch last 50 messages for client-side filtering
+            console.log('Fetching messages...');
             for await (let message of client.fetch({ last: 50 }, { envelope: true, source: true })) {
                 const parsed = await simpleParser(message.source);
                 emails.push({
@@ -45,15 +55,17 @@ app.get('/api/emails', async (req, res) => {
                     html: parsed.textAsHtml
                 });
             }
+            console.log(`Fetched ${emails.length} messages`);
             res.json(emails.reverse());
         } finally {
             lock.release();
+            console.log('Mailbox lock released');
         }
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
+        console.error('Fetch error:', err);
+        res.status(500).json({ error: 'IMAP Error: ' + err.message, stack: err.stack });
     } finally {
-        await client.logout();
+        if (client) await client.logout();
     }
 });
 
