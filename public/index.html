@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster | Email Security Center</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <main class="container">
+        <header class="glass-panel header">
+            <div class="logo">
+                <span class="logo-icon">📧</span>
+                <h1>Email Security Center</h1>
+            </div>
+            <div class="status-badge" id="connection-status">
+                <span class="status-dot"></span> Online
+            </div>
+        </header>
+
+        <section class="glass-panel tiktok-section">
+            <div class="section-header">
+                <h2>TikTok Verification</h2>
+                <p>Detect codes from the last 5 minutes</p>
+            </div>
+            <div class="tiktok-controls">
+                <button id="find-tiktok-btn" class="btn primary-btn">
+                    <span class="btn-icon">🔍</span> Find Latest Code
+                </button>
+                <div class="code-display-group">
+                    <input type="text" id="tiktok-code-input" placeholder="Code will appear here..." readonly>
+                    <button id="copy-btn" class="btn secondary-btn" disabled>Copy</button>
+                </div>
+            </div>
+            <div id="tiktok-status" class="subtext">Ready to search...</div>
+        </section>
+
+        <section class="glass-panel inbox-section">
+            <div class="section-header">
+                <h2>Recent Emails</h2>
+                <div class="header-actions">
+                    <button id="refresh-btn" class="btn icon-btn" title="Refresh Inbox">🔄</button>
+                    <button id="done-btn" class="btn danger-btn">
+                        <span class="btn-icon">🗑️</span> Done
+                    </button>
+                </div>
+            </div>
+            <div id="email-list" class="email-list">
+                <div class="loader">Loading inbox...</div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast" class="toast">Message copied!</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
