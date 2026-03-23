@@ -39,22 +39,39 @@ app.get('/api/emails', async (req, res) => {
     let client;
     try {
         client = await getImapClient();
+        
+        // Check mailbox status
+        const status = await client.status('INBOX', { messages: true, unseen: true });
+        console.log('INBOX Status:', status);
+
+        // List all mailboxes for debugging
+        const mailboxes = await client.list();
+        console.log('Available Mailboxes:', mailboxes.map(m => m.path).join(', '));
+
         let lock = await client.getMailboxLock('INBOX');
         console.log('Mailbox lock acquired');
         try {
             const emails = [];
-            console.log('Fetching messages...');
-            for await (let message of client.fetch({ last: 50 }, { envelope: true, source: true })) {
-                const parsed = await simpleParser(message.source);
-                emails.push({
-                    uid: message.uid,
-                    subject: parsed.subject,
-                    from: parsed.from.text,
-                    date: parsed.date,
-                    text: parsed.text,
-                    html: parsed.textAsHtml
-                });
+            console.log(`Starting fetch (Total messages in INBOX: ${status.messages})`);
+            
+            if (status.messages > 0) {
+                // Fetch last 50 or total if less than 50
+                const fetchRange = status.messages > 50 ? `${status.messages - 49}:${status.messages}` : `1:${status.messages}`;
+                console.log('Fetching range:', fetchRange);
+                
+                for await (let message of client.fetch(fetchRange, { envelope: true, source: true })) {
+                    const parsed = await simpleParser(message.source);
+                    emails.push({
+                        uid: message.uid,
+                        subject: parsed.subject,
+                        from: parsed.from.text,
+                        date: parsed.date,
+                        text: parsed.text,
+                        html: parsed.textAsHtml
+                    });
+                }
             }
+            
             console.log(`Fetched ${emails.length} messages`);
             res.json(emails.reverse());
         } finally {
