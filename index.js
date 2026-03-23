@@ -87,21 +87,27 @@ app.get('/api/emails', async (req, res) => {
 });
 
 // Clear inbox bridge
-app.delete('/api/emails/clear', async (req, res) => {
-    const client = await getImapClient();
+app.get('/api/emails/clear', async (req, res) => {
+    console.log('GET /api/emails/clear requested');
+    let client;
     try {
-        let lock = await client.getMailboxLock('INBOX');
-        try {
-            await client.messageFlagsAdd({ all: true }, ['\\Deleted']);
-            res.json({ success: true, message: 'Inbox cleared.' });
-        } finally {
-            lock.release();
-        }
+        client = await getImapClient();
+        await client.mailboxOpen('INBOX');
+        console.log('Mailbox opened for clearing');
+        
+        // Mark all messages as deleted
+        await client.messageFlagsAdd({ all: true }, ['\\Deleted']);
+        
+        // Explicitly close with expunge
+        await client.mailboxClose(); 
+        console.log('Inbox marked for deletion and closed');
+        
+        res.json({ success: true, message: 'Inbox marked for deletion.' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
+        console.error('Clear error:', err);
+        res.status(500).json({ error: 'Clear Error: ' + err.message });
     } finally {
-        await client.logout();
+        if (client) await client.logout();
     }
 });
 
